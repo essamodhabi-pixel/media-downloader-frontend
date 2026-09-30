@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنزيل الوسائط</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; background: #f4f4f9; text-align: center; color: #333; }
+        .container { max-width: 500px; margin: 40px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        h2 { margin-top: 0; color: #1a1a1a; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #result { margin-top: 20px; word-break: break-all; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>تحميل المقاطع والوسائط</h2>
+        <input type="text" id="mediaUrl" placeholder="أدخل رابط المقطع هنا...">
+        <button id="downloadBtn" onclick="sendDownloadRequest()">تحميل</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://media-downloader-backend-two.vercel.app'; 
+
+        async function sendDownloadRequest() {
+            const urlInput = document.getElementById('mediaUrl').value.trim();
+            const resultDiv = document.getElementById('result');
+            const btn = document.getElementById('downloadBtn');
+
+            if (!urlInput) {
+                resultDiv.innerHTML = '<span style="color:red;">يرجى إدخال الرابط أولاً</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            resultDiv.innerHTML = 'جاري الاتصال بالخادم...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/download`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.downloadUrl) {
+                        resultDiv.innerHTML = `<a href="${data.downloadUrl}" target="_blank" download style="color:green; font-weight:bold;">اضغط هنا لتحميل المقطع</a>`;
+                    } else {
+                        resultDiv.innerHTML = `<span style="color:green;">${data.message || 'تمت المعالجة بنجاح!'}</span>`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<span style="color:red;">${data.error || 'حدث خطأ أثناء معالجة الطلب'}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<span style="color:red;">تعذر الاتصال بالخادم. تأكد من إعدادات الشبكة والسيرفر.</span>';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
